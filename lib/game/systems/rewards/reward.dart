@@ -2,19 +2,23 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/player/player.dart';
-import '../../systems/rewards/reward_type.dart';
-
+import 'reward_type.dart';
 
 class Reward extends PositionComponent {
-  Reward({required Vector2 position, required this.type})
-    : super(
-        position: position,
-        size: Vector2.all(35),
-        anchor: Anchor.center,
-        priority: 60,
-      );
+  Reward({
+    required Vector2 position,
+    required this.type,
+    required this.player,
+  }) : super(
+          position: position,
+          size: Vector2.all(35),
+          anchor: Anchor.center,
+          priority: 60,
+        );
 
   final RewardType type;
+
+  final Player player;
 
   bool _collected = false;
 
@@ -30,21 +34,75 @@ class Reward extends PositionComponent {
       return;
     }
 
-    final players = parent?.children.whereType<Player>();
-
-    if (players == null || players.isEmpty) {
+    if (!player.isMounted) {
       return;
     }
 
-    final player = players.first;
+    // ============================================================
+    // POSICIONES ABSOLUTAS
+    // ============================================================
 
-    final distance = position.distanceTo(player.position);
+    final rewardPosition = absolutePosition;
+    final playerPosition = player.absolutePosition;
 
-    // Distancia necesaria para recoger la recompensa.
-    const pickupDistance = 45.0;
+    // ============================================================
+    // TAMAÑOS
+    // ============================================================
 
-    if (distance <= pickupDistance) {
-      _collect(player);
+    final rewardHalfWidth = size.x / 2;
+    final rewardHalfHeight = size.y / 2;
+
+    final playerHalfWidth = player.size.x / 2;
+    final playerHalfHeight = player.size.y / 2;
+
+    // ============================================================
+    // LÍMITES DE LA RECOMPENSA
+    // ============================================================
+
+    final rewardLeft =
+        rewardPosition.x - rewardHalfWidth;
+
+    final rewardRight =
+        rewardPosition.x + rewardHalfWidth;
+
+    final rewardTop =
+        rewardPosition.y - rewardHalfHeight;
+
+    final rewardBottom =
+        rewardPosition.y + rewardHalfHeight;
+
+    // ============================================================
+    // LÍMITES DEL JUGADOR
+    // ============================================================
+
+    final playerLeft =
+        playerPosition.x - playerHalfWidth;
+
+    final playerRight =
+        playerPosition.x + playerHalfWidth;
+
+    final playerTop =
+        playerPosition.y - playerHalfHeight;
+
+    final playerBottom =
+        playerPosition.y + playerHalfHeight;
+
+    // ============================================================
+    // COMPROBAR SOLAPAMIENTO
+    // ============================================================
+
+    final overlaps =
+        playerRight >= rewardLeft &&
+        playerLeft <= rewardRight &&
+        playerBottom >= rewardTop &&
+        playerTop <= rewardBottom;
+
+    // ============================================================
+    // RECOGER
+    // ============================================================
+
+    if (overlaps) {
+      _collect();
     }
   }
 
@@ -52,17 +110,19 @@ class Reward extends PositionComponent {
   // RECOGER RECOMPENSA
   // ============================================================
 
-  void _collect(Player player) {
+  void _collect() {
     if (_collected) {
       return;
     }
 
     _collected = true;
 
-    // Aplicamos el efecto.
-    _applyReward(player);
+    debugPrint(
+      'RECOMPENSA RECOGIDA: ${type.name}',
+    );
 
-    // Desaparece del mapa.
+    _applyReward();
+
     removeFromParent();
   }
 
@@ -70,7 +130,7 @@ class Reward extends PositionComponent {
   // APLICAR RECOMPENSA
   // ============================================================
 
-  void _applyReward(Player player) {
+  void _applyReward() {
     switch (type) {
       case RewardType.heal:
         player.stats.heal(30);
@@ -97,7 +157,6 @@ class Reward extends PositionComponent {
         break;
     }
 
-    // Actualizamos el HUD después de aplicar la recompensa.
     player.refreshHud();
   }
 
@@ -113,7 +172,11 @@ class Reward extends PositionComponent {
       ..color = _getColor()
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(Offset(size.x / 2, size.y / 2), size.x / 2, paint);
+    canvas.drawCircle(
+      Offset(size.x / 2, size.y / 2),
+      size.x / 2,
+      paint,
+    );
 
     final borderPaint = Paint()
       ..color = Colors.white
@@ -173,27 +236,36 @@ class Reward extends PositionComponent {
     switch (type) {
       case RewardType.heal:
         symbol = '+';
+        break;
 
       case RewardType.maxHealth:
         symbol = '♥';
+        break;
 
       case RewardType.damage:
         symbol = '⚔';
+        break;
 
       case RewardType.attackSpeed:
         symbol = '⚡';
+        break;
 
       case RewardType.movementSpeed:
         symbol = '»';
+        break;
 
       case RewardType.experience:
         symbol = 'XP';
+        break;
     }
 
     textRenderer.render(
       canvas,
       symbol,
-      Vector2(size.x / 2 - 10, size.y / 2 - 10),
+      Vector2(
+        size.x / 2 - 10,
+        size.y / 2 - 10,
+      ),
     );
   }
 }

@@ -1,234 +1,187 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../components/player/player.dart';
-import '../../components/world/fog_of_war.dart';
-import '../../components/world/map_point_of_interest.dart';
-import '../../systems/rewards/reward.dart';
-import '../../systems/rewards/reward_type.dart';
+import '../../../core/constants/game_constants.dart';
+import '../player/player.dart';
+import 'fog_of_war.dart';
+import 'map_point_of_interest.dart';
 
-class MiniMap extends StatelessWidget {
-  const MiniMap({
-    super.key,
+class Minimap extends PositionComponent {
+  Minimap({
     required this.player,
     required this.fogOfWar,
-    required this.mapPoints,
-    required this.rewards,
-  });
+    required this.gameWorld,
+  }) : super(
+          size: Vector2.all(180),
+          priority: 1000,
+        );
 
   final Player player;
+
   final FogOfWar fogOfWar;
 
-  final List<MapPointOfInterest> mapPoints;
-  final List<Reward> rewards;
+  final PositionComponent gameWorld;
 
   // ============================================================
   // CONFIGURACIÓN
   // ============================================================
 
-  static const double mapSize = 150;
+  static const double minimapSize = 180;
 
-  static const double borderWidth = 3;
+  static const double padding = 8;
 
   // ============================================================
-  // BUILD
+  // LOAD
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: 20,
-      right: 20,
-      child: Container(
-        width: mapSize,
-        height: mapSize,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.75),
-          border: Border.all(
-            color: Colors.white,
-            width: borderWidth,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: CustomPaint(
-          painter: _MiniMapPainter(
-            player: player,
-            fogOfWar: fogOfWar,
-            mapPoints: mapPoints,
-            rewards: rewards,
-          ),
-        ),
-      ),
+  Future<void> onLoad() async {
+    await super.onLoad();
+
+    size = Vector2.all(minimapSize);
+
+    position = Vector2(
+      15,
+      15,
     );
   }
-}
-
-// ================================================================
-// PAINTER
-// ================================================================
-
-class _MiniMapPainter extends CustomPainter {
-  _MiniMapPainter({
-    required this.player,
-    required this.fogOfWar,
-    required this.mapPoints,
-    required this.rewards,
-  });
-
-  final Player player;
-  final FogOfWar fogOfWar;
-
-  final List<MapPointOfInterest> mapPoints;
-  final List<Reward> rewards;
 
   // ============================================================
-  // TAMAÑO DEL MAPA DEL JUEGO
+  // UPDATE
   // ============================================================
 
-  static const double worldSize = 3000.0;
 
   // ============================================================
-  // PAINT
+  // RENDER
   // ============================================================
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final scaleX = size.width / worldSize;
-    final scaleY = size.height / worldSize;
+  void render(Canvas canvas) {
+    super.render(canvas);
 
     // ============================================================
     // FONDO
     // ============================================================
 
     final backgroundPaint = Paint()
-      ..color = const Color(0xFF263326)
+      ..color = Colors.black.withValues(alpha: 0.75)
       ..style = PaintingStyle.fill;
 
-    canvas.drawRect(
-      Rect.fromLTWH(
-        0,
-        0,
-        size.width,
-        size.height,
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          0,
+          0,
+          minimapSize,
+          minimapSize,
+        ),
+        const Radius.circular(12),
       ),
       backgroundPaint,
     );
 
     // ============================================================
-    // CUADRÍCULA
+    // ÁREA DEL MAPA
     // ============================================================
 
-    _drawGrid(
+    final mapRect = Rect.fromLTWH(
+      padding,
+      padding,
+      minimapSize - padding * 2,
+      minimapSize - padding * 2,
+    );
+
+    final mapPaint = Paint()
+      ..color = const Color(0xFF4A6741)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawRect(
+      mapRect,
+      mapPaint,
+    );
+
+    // ============================================================
+    // NIEBLA
+    // ============================================================
+
+    _renderFog(
       canvas,
-      size,
-      scaleX,
-      scaleY,
+      mapRect,
     );
 
     // ============================================================
     // PUNTOS DE INTERÉS
     // ============================================================
 
-    for (final point in mapPoints) {
-      if (!_isDiscovered(point.position)) {
-        continue;
-      }
-
-      _drawPointOfInterest(
-        canvas,
-        point,
-        scaleX,
-        scaleY,
-      );
-    }
-
-    // ============================================================
-    // RECOMPENSAS
-    // ============================================================
-
-    for (final reward in rewards) {
-      if (!_isDiscovered(reward.position)) {
-        continue;
-      }
-
-      _drawReward(
-        canvas,
-        reward,
-        scaleX,
-        scaleY,
-      );
-    }
+    _renderPointsOfInterest(
+      canvas,
+      mapRect,
+    );
 
     // ============================================================
     // JUGADOR
     // ============================================================
 
-    _drawPlayer(
+    _renderPlayer(
       canvas,
-      scaleX,
-      scaleY,
+      mapRect,
+    );
+
+    // ============================================================
+    // BORDE
+    // ============================================================
+
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        mapRect,
+        const Radius.circular(6),
+      ),
+      borderPaint,
     );
   }
 
   // ============================================================
-  // COMPROBAR DESCUBRIMIENTO
+  // NIEBLA DEL MINIMAPA
   // ============================================================
 
-  bool _isDiscovered(Vector2 position) {
-    return fogOfWar.isDiscovered(position);
-  }
-
-  // ============================================================
-  // CONVERTIR POSICIÓN DEL MUNDO AL MINIMAPA
-  // ============================================================
-
-  Offset _worldToMiniMap(
-    double x,
-    double y,
-    double scaleX,
-    double scaleY,
-  ) {
-    return Offset(
-      x * scaleX,
-      y * scaleY,
-    );
-  }
-
-  // ============================================================
-  // CUADRÍCULA
-  // ============================================================
-
-  void _drawGrid(
+  void _renderFog(
     Canvas canvas,
-    Size size,
-    double scaleX,
-    double scaleY,
+    Rect mapRect,
   ) {
-    final gridPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
-      ..strokeWidth = 1;
+    final columns = fogOfWar.mapColumns;
+    final rows = fogOfWar.mapRows;
 
-    const gridSize = 500.0;
+    final cellWidth =
+        mapRect.width / columns;
 
-    for (double x = 0; x <= worldSize; x += gridSize) {
-      final screenX = x * scaleX;
+    final cellHeight =
+        mapRect.height / rows;
 
-      canvas.drawLine(
-        Offset(screenX, 0),
-        Offset(screenX, size.height),
-        gridPaint,
-      );
-    }
+    final fogPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.92)
+      ..style = PaintingStyle.fill;
 
-    for (double y = 0; y <= worldSize; y += gridSize) {
-      final screenY = y * scaleY;
+    for (var y = 0; y < rows; y++) {
+      for (var x = 0; x < columns; x++) {
+        if (fogOfWar.isCellDiscovered(x, y)) {
+          continue;
+        }
 
-      canvas.drawLine(
-        Offset(0, screenY),
-        Offset(size.width, screenY),
-        gridPaint,
-      );
+        canvas.drawRect(
+          Rect.fromLTWH(
+            mapRect.left + x * cellWidth,
+            mapRect.top + y * cellHeight,
+            cellWidth + 0.5,
+            cellHeight + 0.5,
+          ),
+          fogPaint,
+        );
+      }
     }
   }
 
@@ -236,152 +189,114 @@ class _MiniMapPainter extends CustomPainter {
   // JUGADOR
   // ============================================================
 
-  void _drawPlayer(
+  void _renderPlayer(
     Canvas canvas,
-    double scaleX,
-    double scaleY,
+    Rect mapRect,
   ) {
-    final position = _worldToMiniMap(
-      player.position.x,
-      player.position.y,
-      scaleX,
-      scaleY,
+    final playerPosition = _worldToMinimap(
+      player.position,
+      mapRect,
     );
 
-    // Punto azul
-    final paint = Paint()
+    final playerPaint = Paint()
       ..color = Colors.blue
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
-      position,
-      5,
-      paint,
+      playerPosition,
+      4,
+      playerPaint,
     );
 
-    // Borde blanco
     final borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 1.5;
 
     canvas.drawCircle(
-      position,
+      playerPosition,
       5,
       borderPaint,
     );
   }
 
   // ============================================================
-  // PUNTO DE INTERÉS
+  // PUNTOS DE INTERÉS
   // ============================================================
 
-  void _drawPointOfInterest(
+  void _renderPointsOfInterest(
     Canvas canvas,
-    MapPointOfInterest point,
-    double scaleX,
-    double scaleY,
+    Rect mapRect,
   ) {
-    final position = _worldToMiniMap(
-      point.position.x,
-      point.position.y,
-      scaleX,
-      scaleY,
-    );
+    final points =
+        gameWorld.children.whereType<MapPointOfInterest>();
 
-    Color color;
+    for (final point in points) {
+      // Los puntos no descubiertos permanecen ocultos.
+      if (!fogOfWar.isDiscovered(point.position)) {
+        continue;
+      }
 
-    switch (point.type) {
-      case PointOfInterestType.house:
-        color = Colors.brown;
-        break;
+      final position = _worldToMinimap(
+        point.position,
+        mapRect,
+      );
 
-      case PointOfInterestType.warehouse:
-        color = Colors.blueGrey;
-        break;
+      final paint = Paint()
+        ..color = _getPointColor(point.type)
+        ..style = PaintingStyle.fill;
 
-      case PointOfInterestType.medical:
-        color = Colors.red;
-        break;
-
-      case PointOfInterestType.chest:
-        color = Colors.amber;
-        break;
+      canvas.drawCircle(
+        position,
+        3,
+        paint,
+      );
     }
-
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(
-      position,
-      4,
-      paint,
-    );
   }
 
   // ============================================================
-  // RECOMPENSA
+  // COLOR DE LOS PUNTOS
   // ============================================================
 
-  void _drawReward(
-    Canvas canvas,
-    Reward reward,
-    double scaleX,
-    double scaleY,
+  Color _getPointColor(
+    PointOfInterestType type,
   ) {
-    final position = _worldToMiniMap(
-      reward.position.x,
-      reward.position.y,
-      scaleX,
-      scaleY,
-    );
-
-    final paint = Paint()
-      ..color = _rewardColor(reward)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(
-      position,
-      3,
-      paint,
-    );
-  }
-
-  // ============================================================
-  // COLOR DE RECOMPENSA
-  // ============================================================
-
-  Color _rewardColor(Reward reward) {
-    switch (reward.type) {
-      case RewardType.heal:
+    switch (type) {
+      case PointOfInterestType.house:
         return Colors.red;
 
-      case RewardType.maxHealth:
-        return Colors.pink;
+      case PointOfInterestType.warehouse:
+        return Colors.blueGrey;
 
-      case RewardType.damage:
-        return Colors.orange;
+      case PointOfInterestType.medical:
+        return Colors.white;
 
-      case RewardType.attackSpeed:
-        return Colors.yellow;
-
-      case RewardType.movementSpeed:
-        return Colors.blue;
-
-      case RewardType.experience:
-        return Colors.purple;
+      case PointOfInterestType.chest:
+        return Colors.amber;
     }
   }
 
   // ============================================================
-  // SHOULD REPAINT
+  // CONVERSIÓN MAPA → MINIMAPA
   // ============================================================
 
-  @override
-  bool shouldRepaint(
-    covariant _MiniMapPainter oldDelegate,
+  Offset _worldToMinimap(
+    Vector2 worldPosition,
+    Rect mapRect,
   ) {
-    return true;
+    final normalizedX =
+        worldPosition.x /
+        GameConstants.worldWidth;
+
+    final normalizedY =
+        worldPosition.y /
+        GameConstants.worldHeight;
+
+    return Offset(
+      mapRect.left +
+          normalizedX * mapRect.width,
+      mapRect.top +
+          normalizedY * mapRect.height,
+    );
   }
 }

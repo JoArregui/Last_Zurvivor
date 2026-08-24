@@ -15,21 +15,10 @@ class FogOfWar extends Component {
   // CONFIGURACIÓN
   // ============================================================
 
-  /// Radio de visión del jugador.
   final double visionRadius = 150;
 
-  /// Tamaño de cada celda del mapa.
-  ///
-  /// Cuanto menor sea el valor:
-  /// - más suave será la forma de la zona descubierta
-  /// - más celdas tendrá el mapa
-  /// - mayor será el número de comprobaciones
   final double cellSize = 25;
 
-  /// Distancia mínima que debe desplazarse el jugador
-  /// antes de volver a calcular las zonas descubiertas.
-  ///
-  /// Esto evita hacer el cálculo en cada frame.
   final double discoveryUpdateDistance = 50;
 
   // ============================================================
@@ -41,17 +30,9 @@ class FogOfWar extends Component {
 
   late final List<bool> discovered;
 
-  // ============================================================
-  // POSICIÓN UTILIZADA EN EL ÚLTIMO CÁLCULO
-  // ============================================================
-
   Vector2 _lastDiscoveryPosition = Vector2.zero();
 
   bool _initialized = false;
-
-  // ============================================================
-  // CACHÉ DE CELDAS NO DESCUBIERTAS
-  // ============================================================
 
   final List<Rect> _undiscoveredRects = [];
 
@@ -74,14 +55,11 @@ class FogOfWar extends Component {
       false,
     );
 
-    // Guardamos la posición inicial del jugador.
     _lastDiscoveryPosition =
         player.position.clone();
 
-    // Descubrimos inmediatamente la zona inicial.
     _discoverAroundPlayer();
 
-    // Construimos la lista inicial de rectángulos.
     _rebuildUndiscoveredRects();
 
     _initialized = true;
@@ -101,10 +79,6 @@ class FogOfWar extends Component {
 
     final currentPosition = player.position;
 
-    // ============================================================
-    // COMPROBAR SI EL JUGADOR SE HA MOVIDO SUFICIENTEMENTE
-    // ============================================================
-
     final distance =
         currentPosition.distanceTo(
       _lastDiscoveryPosition,
@@ -113,10 +87,6 @@ class FogOfWar extends Component {
     if (distance < discoveryUpdateDistance) {
       return;
     }
-
-    // ============================================================
-    // ACTUALIZAR DESCUBRIMIENTO
-    // ============================================================
 
     _lastDiscoveryPosition =
         currentPosition.clone();
@@ -152,10 +122,6 @@ class FogOfWar extends Component {
         x <= centerX + cellRadius;
         x++
       ) {
-        // --------------------------------------------------------
-        // FUERA DEL MAPA
-        // --------------------------------------------------------
-
         if (x < 0 ||
             x >= columns ||
             y < 0 ||
@@ -165,33 +131,17 @@ class FogOfWar extends Component {
 
         final index = _index(x, y);
 
-        // --------------------------------------------------------
-        // SI YA ESTÁ DESCUBIERTA
-        // --------------------------------------------------------
-
         if (discovered[index]) {
           continue;
         }
-
-        // --------------------------------------------------------
-        // CENTRO DE LA CELDA
-        // --------------------------------------------------------
 
         final cellCenter = Vector2(
           x * cellSize + cellSize / 2,
           y * cellSize + cellSize / 2,
         );
 
-        // --------------------------------------------------------
-        // DISTANCIA AL JUGADOR
-        // --------------------------------------------------------
-
         final distance =
             cellCenter.distanceTo(playerPosition);
-
-        // --------------------------------------------------------
-        // DESCUBRIR CELDA
-        // --------------------------------------------------------
 
         if (distance <= visionRadius) {
           discovered[index] = true;
@@ -201,7 +151,7 @@ class FogOfWar extends Component {
   }
 
   // ============================================================
-  // RECONSTRUIR RECTÁNGULOS DE NIEBLA
+  // RECONSTRUIR NIEBLA
   // ============================================================
 
   void _rebuildUndiscoveredRects() {
@@ -228,7 +178,7 @@ class FogOfWar extends Component {
   }
 
   // ============================================================
-  // ÍNDICE DE CELDA
+  // ÍNDICE
   // ============================================================
 
   int _index(int x, int y) {
@@ -236,7 +186,7 @@ class FogOfWar extends Component {
   }
 
   // ============================================================
-  // COMPROBAR SI UNA POSICIÓN ESTÁ DESCUBIERTA
+  // API PARA EL MINIMAPA
   // ============================================================
 
   bool isDiscovered(Vector2 position) {
@@ -256,6 +206,24 @@ class FogOfWar extends Component {
     return discovered[_index(x, y)];
   }
 
+  /// Permite al minimapa comprobar una celda concreta.
+  bool isCellDiscovered(int x, int y) {
+    if (x < 0 ||
+        x >= columns ||
+        y < 0 ||
+        y >= rows) {
+      return false;
+    }
+
+    return discovered[_index(x, y)];
+  }
+
+  int get mapColumns => columns;
+
+  int get mapRows => rows;
+
+  double get mapCellSize => cellSize;
+
   // ============================================================
   // RENDER
   // ============================================================
@@ -263,19 +231,6 @@ class FogOfWar extends Component {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-
-    // ============================================================
-    // NIEBLA
-    // ============================================================
-    //
-    // Solo dibujamos las zonas que todavía NO han sido
-    // descubiertas.
-    //
-    // Las zonas descubiertas permanecen completamente visibles.
-    //
-    // Ya NO existe una segunda capa gris circular alrededor
-    // del jugador.
-    // ============================================================
 
     final fogPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.88)

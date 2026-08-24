@@ -18,6 +18,7 @@ class MapPointOfInterest extends PositionComponent {
   MapPointOfInterest({
     required Vector2 position,
     required this.type,
+    required this.player, 
   }) : super(
           position: position,
           size: Vector2.all(70),
@@ -26,6 +27,7 @@ class MapPointOfInterest extends PositionComponent {
         );
 
   final PointOfInterestType type;
+  final Player player; 
 
   final Random _random = Random();
 
@@ -33,10 +35,15 @@ class MapPointOfInterest extends PositionComponent {
   // CONFIGURACIÓN
   // ============================================================
 
-  /// Distancia para descubrir/interactuar.
+  /// Distancia a la que el jugador descubre el punto de interés.
   final double interactionRadius = 110;
 
+  /// Indica si el punto ya ha sido descubierto.
   bool discovered = false;
+
+  /// Indica si el punto ya ha sido utilizado.
+  ///
+  /// Una vez utilizado no volverá a generar recompensas.
   bool used = false;
 
   // ============================================================
@@ -47,18 +54,18 @@ class MapPointOfInterest extends PositionComponent {
   void update(double dt) {
     super.update(dt);
 
-    if (used) return;
+    // Si ya se ha utilizado, no hacemos nada.
+    if (used) {
+      return;
+    }
 
-    final players = parent?.children.whereType<Player>();
-
-    if (players == null || players.isEmpty) return;
-
-    final player = players.first;
-
+    // Distancia entre el jugador y el punto de interés.
     final distance = position.distanceTo(player.position);
 
+    // Si el jugador está suficientemente cerca,
+    // descubrimos el punto.
     if (distance <= interactionRadius) {
-      _discover();
+      _discover(player);
     }
   }
 
@@ -66,38 +73,66 @@ class MapPointOfInterest extends PositionComponent {
   // DESCUBRIR PUNTO
   // ============================================================
 
-  void _discover() {
-    if (discovered) return;
+  void _discover(Player player) {
+    // Evitamos descubrirlo varias veces.
+    if (discovered) {
+      return;
+    }
 
     discovered = true;
 
-    debugPrint("PUNTO DESCUBIERTO: ${type.name}");
+    debugPrint(
+      'PUNTO DESCUBIERTO: ${type.name}',
+    );
 
-    _spawnReward();
+    // Generamos la recompensa.
+    //
+    // IMPORTANTE:
+    // Pasamos el player como parámetro porque Reward necesita
+    // conocer al jugador para comprobar la distancia y aplicar
+    // la recompensa.
+    _spawnReward(player);
   }
 
   // ============================================================
   // GENERAR RECOMPENSA
   // ============================================================
 
-  void _spawnReward() {
-    if (used) return;
+  void _spawnReward(Player player) {
+    // Si ya fue utilizado, no generamos otra recompensa.
+    if (used) {
+      return;
+    }
 
     used = true;
 
+    // Elegimos aleatoriamente qué recompensa generar.
     final rewardType = _chooseReward();
 
-    // Pequeño desplazamiento para que aparezca al lado.
+    // Pequeño desplazamiento aleatorio.
+    //
+    // Esto evita que la recompensa aparezca exactamente
+    // en el centro del punto de interés.
     final offset = Vector2(
       (_random.nextDouble() - 0.5) * 40,
       (_random.nextDouble() - 0.5) * 40,
     );
 
+    // Añadimos la recompensa al mismo padre que contiene
+    // el punto de interés.
+    //
+    // De esta forma Reward y MapPointOfInterest están en
+    // las mismas coordenadas del mundo.
     parent?.add(
       Reward(
         position: position + offset,
         type: rewardType,
+        player: player,
       ),
+    );
+
+    debugPrint(
+      'RECOMPENSA GENERADA: ${rewardType.name}',
     );
   }
 
@@ -133,8 +168,10 @@ class MapPointOfInterest extends PositionComponent {
         switch (_random.nextInt(3)) {
           case 0:
             return RewardType.damage;
+
           case 1:
             return RewardType.attackSpeed;
+
           default:
             return RewardType.movementSpeed;
         }
@@ -145,7 +182,10 @@ class MapPointOfInterest extends PositionComponent {
 
       case PointOfInterestType.chest:
         return RewardType.values[
-            _random.nextInt(RewardType.values.length)];
+            _random.nextInt(
+              RewardType.values.length,
+            )
+        ];
     }
   }
 
@@ -175,15 +215,21 @@ class MapPointOfInterest extends PositionComponent {
         break;
     }
 
-    // Halo amarillo cuando se descubre.
+    // ============================================================
+    // INDICADOR DE DESCUBRIMIENTO
+    // ============================================================
+
     if (discovered && !used) {
       _renderDiscoveryIndicator(canvas);
     }
 
-    // Punto ya utilizado → se dibuja gris.
+    // ============================================================
+    // PUNTO UTILIZADO
+    // ============================================================
+
     if (used) {
       final paint = Paint()
-        ..color = Colors.black.withOpacity(0.35)
+        ..color = Colors.black.withValues(alpha: 0.35)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(
@@ -224,21 +270,37 @@ class MapPointOfInterest extends PositionComponent {
       ..color = used ? Colors.grey.shade600 : Colors.red
       ..style = PaintingStyle.fill;
 
+    // Cuerpo de la casa.
     canvas.drawRect(
-      const Rect.fromLTWH(10, 25, 50, 35),
+      const Rect.fromLTWH(
+        10,
+        25,
+        50,
+        35,
+      ),
       bodyPaint,
     );
 
+    // Tejado.
     final roof = Path()
       ..moveTo(5, 25)
       ..lineTo(35, 5)
       ..lineTo(65, 25)
       ..close();
 
-    canvas.drawPath(roof, roofPaint);
+    canvas.drawPath(
+      roof,
+      roofPaint,
+    );
 
+    // Puerta.
     canvas.drawRect(
-      const Rect.fromLTWH(28, 42, 14, 18),
+      const Rect.fromLTWH(
+        28,
+        42,
+        14,
+        18,
+      ),
       Paint()..color = Colors.black,
     );
   }
@@ -258,18 +320,36 @@ class MapPointOfInterest extends PositionComponent {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
 
+    // Cuerpo.
     canvas.drawRect(
-      const Rect.fromLTWH(5, 15, 60, 45),
+      const Rect.fromLTWH(
+        5,
+        15,
+        60,
+        45,
+      ),
       bodyPaint,
     );
 
+    // Borde.
     canvas.drawRect(
-      const Rect.fromLTWH(5, 15, 60, 45),
+      const Rect.fromLTWH(
+        5,
+        15,
+        60,
+        45,
+      ),
       borderPaint,
     );
 
+    // Puerta grande.
     canvas.drawRect(
-      const Rect.fromLTWH(22, 32, 26, 28),
+      const Rect.fromLTWH(
+        22,
+        32,
+        26,
+        28,
+      ),
       Paint()..color = Colors.black,
     );
   }
@@ -284,31 +364,54 @@ class MapPointOfInterest extends PositionComponent {
           used ? Colors.grey.shade300 : Colors.white
       ..style = PaintingStyle.fill;
 
+    // Edificio.
     canvas.drawRect(
-      const Rect.fromLTWH(5, 5, 60, 60),
+      const Rect.fromLTWH(
+        5,
+        5,
+        60,
+        60,
+      ),
       bodyPaint,
     );
 
+    // Borde.
     canvas.drawRect(
-      const Rect.fromLTWH(5, 5, 60, 60),
+      const Rect.fromLTWH(
+        5,
+        5,
+        60,
+        60,
+      ),
       Paint()
         ..color = Colors.black
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
 
+    // Cruz.
     final crossPaint = Paint()
       ..color =
           used ? Colors.grey : Colors.red
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
-      const Rect.fromLTWH(28, 15, 14, 40),
+      const Rect.fromLTWH(
+        28,
+        15,
+        14,
+        40,
+      ),
       crossPaint,
     );
 
     canvas.drawRect(
-      const Rect.fromLTWH(15, 28, 40, 14),
+      const Rect.fromLTWH(
+        15,
+        28,
+        40,
+        14,
+      ),
       crossPaint,
     );
   }
@@ -323,19 +426,32 @@ class MapPointOfInterest extends PositionComponent {
           used ? Colors.grey.shade700 : Colors.amber
       ..style = PaintingStyle.fill;
 
+    // Cofre.
     canvas.drawRect(
-      const Rect.fromLTWH(8, 20, 54, 35),
+      const Rect.fromLTWH(
+        8,
+        20,
+        54,
+        35,
+      ),
       chestPaint,
     );
 
+    // Borde.
     canvas.drawRect(
-      const Rect.fromLTWH(8, 20, 54, 35),
+      const Rect.fromLTWH(
+        8,
+        20,
+        54,
+        35,
+      ),
       Paint()
         ..color = Colors.black
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
 
+    // Cerradura.
     canvas.drawCircle(
       const Offset(35, 38),
       5,
