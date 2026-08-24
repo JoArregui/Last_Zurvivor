@@ -9,7 +9,7 @@ import 'player_stats.dart';
 
 class Player extends PositionComponent {
   Player({required Vector2 position, required this.gameController})
-    : super(position: position, size: Vector2.all(40), anchor: Anchor.center);
+    : super(position: position, size: Vector2.all(40), anchor: Anchor.center, priority: 200,);
 
   final PlayerStats stats = PlayerStats();
 

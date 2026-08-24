@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/game_constants.dart';
+import 'map_point_of_interest.dart';
 
 class GameWorld extends RectangleComponent {
   GameWorld()
@@ -11,16 +12,55 @@ class GameWorld extends RectangleComponent {
             GameConstants.worldWidth,
             GameConstants.worldHeight,
           ),
-          paint: Paint()..color = const Color(0xFF4A6741),
+          paint: Paint()
+            ..color = const Color(0xFF4A6741),
+          priority: 0,
         );
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+
+    // ============================================================
+    // PUNTOS DE INTERÉS
+    // ============================================================
+
+    add(
+      MapPointOfInterest(
+        position: Vector2(900, 900),
+        type: PointOfInterestType.house,
+      ),
+    );
+
+    add(
+      MapPointOfInterest(
+        position: Vector2(2100, 900),
+        type: PointOfInterestType.warehouse,
+      ),
+    );
+
+    add(
+      MapPointOfInterest(
+        position: Vector2(900, 2100),
+        type: PointOfInterestType.medical,
+      ),
+    );
+
+    add(
+      MapPointOfInterest(
+        position: Vector2(2100, 2100),
+        type: PointOfInterestType.chest,
+      ),
+    );
+  }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
 
-    // --------------------------------------------------
+    // ============================================================
     // BORDE DEL MAPA
-    // --------------------------------------------------
+    // ============================================================
 
     final borderPaint = Paint()
       ..color = Colors.black
@@ -37,9 +77,9 @@ class GameWorld extends RectangleComponent {
       borderPaint,
     );
 
-    // --------------------------------------------------
+    // ============================================================
     // CRUZ DEL CENTRO DEL MAPA
-    // --------------------------------------------------
+    // ============================================================
 
     final centerPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.15)

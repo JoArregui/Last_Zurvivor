@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 
 import 'components/player/player.dart';
 import 'components/world/game_world.dart';
+import 'components/world/fog_of_war.dart';
 import 'systems/enemy_spawner.dart';
 import 'game_controller.dart';
 
 class LastSurvivorGame extends FlameGame {
-  LastSurvivorGame({
-    required this.gameController,
-  });
+  LastSurvivorGame({required this.gameController});
 
   final GameController gameController;
 
@@ -24,10 +23,11 @@ class LastSurvivorGame extends FlameGame {
     await super.onLoad();
 
     // ============================================================
-    // MUNDO (Fondo / Mapa)
+    // MUNDO
     // ============================================================
 
     gameWorld = GameWorld();
+
     world.add(gameWorld);
 
     // ============================================================
@@ -35,15 +35,21 @@ class LastSurvivorGame extends FlameGame {
     // ============================================================
 
     player = Player(
-      position: Vector2(
-        1500,
-        1500,
-      ),
+      position: Vector2(1500, 1500),
       gameController: gameController,
     );
 
     gameController.player = player;
+
     world.add(player);
+
+    // ============================================================
+    // NIEBLA DE GUERRA
+    // ============================================================
+
+    final fogOfWar = FogOfWar(player: player);
+
+    world.add(fogOfWar);
 
     // ============================================================
     // CÁMARA
@@ -55,12 +61,7 @@ class LastSurvivorGame extends FlameGame {
     // ENEMIGOS
     // ============================================================
 
-    // Aquí está el cambio importante: pasamos "world" (el World de FlameGame)
-    // para que los zombies nazcan como hermanos de Player y Projectile.
-    enemySpawner = EnemySpawner(
-      player: player,
-      world: world, 
-    );
+    enemySpawner = EnemySpawner(player: player, world: world);
 
     add(enemySpawner);
 
@@ -69,18 +70,13 @@ class LastSurvivorGame extends FlameGame {
     // ============================================================
 
     joystick = JoystickComponent(
-      knob: CircleComponent(
-        radius: 20,
-        paint: Paint()..color = Colors.white,
-      ),
+      knob: CircleComponent(radius: 20, paint: Paint()..color = Colors.white),
+
       background: CircleComponent(
-        radius: 90,
-        paint: Paint()..color = Colors.white.withOpacity(0.35),
+        radius: 50,
+        paint: Paint()..color = Colors.white.withOpacity(0.30),
       ),
-      margin: const EdgeInsets.only(
-        left: 40,
-        bottom: 40,
-      ),
+      margin: const EdgeInsets.only(left: 40, bottom: 40),
       priority: 10,
     );
 
@@ -95,9 +91,7 @@ class LastSurvivorGame extends FlameGame {
     // MOVIMIENTO DEL JUGADOR
     // ============================================================
 
-    player.move(
-      joystick.relativeDelta,
-    );
+    player.move(joystick.relativeDelta);
   }
 
   void pauseGame() {
