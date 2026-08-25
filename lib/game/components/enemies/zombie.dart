@@ -3,37 +3,17 @@ import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
+import '../../systems/rewards/reward.dart';
+import '../../systems/rewards/reward_type.dart';
 import '../player/player.dart';
 
-enum ZombieState {
-  idle,
-  chasing,
-  attacking,
-  dead,
-}
+
+enum ZombieState { idle, chasing, attacking, dead }
 
 enum ZombieType {
-  normal(
-    health: 100,
-    speed: 70,
-    size: 36,
-    color: Colors.red,
-    xpReward: 25,
-  ),
-  fast(
-    health: 50,
-    speed: 120,
-    size: 28,
-    color: Colors.orange,
-    xpReward: 20,
-  ),
-  tank(
-    health: 300,
-    speed: 40,
-    size: 50,
-    color: Colors.purple,
-    xpReward: 60,
-  );
+  normal(health: 100, speed: 70, size: 36, color: Colors.red, xpReward: 25),
+  fast(health: 50, speed: 120, size: 28, color: Colors.orange, xpReward: 20),
+  tank(health: 300, speed: 40, size: 50, color: Colors.purple, xpReward: 60);
 
   const ZombieType({
     required this.health,
@@ -56,10 +36,10 @@ class Zombie extends PositionComponent {
     required this.player,
     this.type = ZombieType.normal,
   }) : super(
-          position: position,
-          size: Vector2.all(type.size),
-          anchor: Anchor.center,
-        ) {
+         position: position,
+         size: Vector2.all(type.size),
+         anchor: Anchor.center,
+       ) {
     maxHealth = type.health;
     health = type.health;
     speed = type.speed;
@@ -69,6 +49,7 @@ class Zombie extends PositionComponent {
 
   final Player player;
   final ZombieType type;
+  final math.Random _random = math.Random();
 
   // ============================================================
   // ESTADÍSTICAS
@@ -200,19 +181,58 @@ class Zombie extends PositionComponent {
 
     health -= damage;
 
-    // Evitamos valores negativos.
     if (health <= 0) {
       health = 0;
 
       state = ZombieState.dead;
 
-      // El jugador obtiene experiencia por matar al zombi.
+      // ============================================================
+      // EXPERIENCIA
+      // ============================================================
+
       player.gainExperience(xpReward);
 
-      // Eliminamos el zombi del mundo.
+      // ============================================================
+      // POSIBILIDAD DE SOLTAR RECOMPENSA
+      // ============================================================
+
+      _tryDropReward();
+
+      // ============================================================
+      // ELIMINAR ZOMBI
+      // ============================================================
+
       removeFromParent();
     }
   }
+
+  // ============================================================
+// RECOMPENSAS
+// ============================================================
+
+void _tryDropReward() {
+  // 15% de probabilidad.
+  const double rewardChance = 0.15;
+
+  if (_random.nextDouble() > rewardChance) {
+    return;
+  }
+
+  // Elegimos aleatoriamente el tipo de recompensa.
+  final rewardType = RewardType.values[
+    _random.nextInt(RewardType.values.length)
+  ];
+
+  // La recompensa aparece exactamente donde murió el zombi.
+  final reward = Reward(
+    position: position.clone(),
+    type: rewardType,
+    player: player,
+  );
+
+  // El Reward y el Zombie están dentro del mismo World.
+  parent?.add(reward);
+}
 
   // ============================================================
   // RENDER
@@ -230,11 +250,7 @@ class Zombie extends PositionComponent {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(
-      Offset(size.x / 2, size.y / 2),
-      size.x / 2,
-      paint,
-    );
+    canvas.drawCircle(Offset(size.x / 2, size.y / 2), size.x / 2, paint);
 
     // ============================================================
     // BORDE
@@ -277,29 +293,16 @@ class Zombie extends PositionComponent {
 
     // Fondo de la barra.
     canvas.drawRect(
-      Rect.fromLTWH(
-        -2,
-        -12,
-        barWidth,
-        barHeight,
-      ),
+      Rect.fromLTWH(-2, -12, barWidth, barHeight),
       backgroundPaint,
     );
 
     // Porcentaje de vida.
-    final healthPercentage = math.max(
-      0.0,
-      health / maxHealth,
-    );
+    final healthPercentage = math.max(0.0, health / maxHealth);
 
     // Vida restante.
     canvas.drawRect(
-      Rect.fromLTWH(
-        -2,
-        -12,
-        barWidth * healthPercentage,
-        barHeight,
-      ),
+      Rect.fromLTWH(-2, -12, barWidth * healthPercentage, barHeight),
       healthPaint,
     );
   }

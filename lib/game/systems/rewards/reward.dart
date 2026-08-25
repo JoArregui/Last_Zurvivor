@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
@@ -17,10 +19,45 @@ class Reward extends PositionComponent {
         );
 
   final RewardType type;
-
   final Player player;
 
   bool _collected = false;
+
+  // ============================================================
+  // ANIMACIÓN NORMAL
+  // ============================================================
+
+  double _animationTime = 0;
+
+  /// Desplazamiento vertical máximo.
+  final double floatAmplitude = 4;
+
+  /// Velocidad de flotación/pulso.
+  final double animationSpeed = 3;
+
+  /// Escala mínima del pulso.
+  final double pulseMin = 0.90;
+
+  /// Escala máxima del pulso.
+  final double pulseMax = 1.10;
+
+  /// Desplazamiento visual vertical.
+  double _visualFloatOffset = 0;
+
+  // ============================================================
+  // ANIMACIÓN DE RECOGIDA
+  // ============================================================
+
+  double _collectAnimationTime = 0;
+
+  /// Duración total del efecto de recogida.
+  final double collectAnimationDuration = 0.20;
+
+  /// Escala máxima durante la recogida.
+  final double collectMaxScale = 1.8;
+
+  /// Radio máximo del destello.
+  final double collectFlashRadius = 32;
 
   // ============================================================
   // UPDATE
@@ -30,13 +67,36 @@ class Reward extends PositionComponent {
   void update(double dt) {
     super.update(dt);
 
+    // ============================================================
+    // ANIMACIÓN DE RECOGIDA
+    // ============================================================
+
     if (_collected) {
+      _collectAnimationTime += dt;
+
+      if (_collectAnimationTime >= collectAnimationDuration) {
+        removeFromParent();
+      }
+
       return;
     }
+
+    // ============================================================
+    // COMPROBAR JUGADOR
+    // ============================================================
 
     if (!player.isMounted) {
       return;
     }
+
+    // ============================================================
+    // ANIMACIÓN NORMAL
+    // ============================================================
+
+    _animationTime += dt * animationSpeed;
+
+    _visualFloatOffset =
+        math.sin(_animationTime) * floatAmplitude;
 
     // ============================================================
     // POSICIONES ABSOLUTAS
@@ -121,9 +181,14 @@ class Reward extends PositionComponent {
       'RECOMPENSA RECOGIDA: ${type.name}',
     );
 
+    // Aplicamos inmediatamente el efecto.
     _applyReward();
 
-    removeFromParent();
+    // El componente NO se elimina inmediatamente.
+    //
+    // Se mantiene durante unos milisegundos para poder
+    // reproducir la animación visual de recogida.
+    _collectAnimationTime = 0;
   }
 
   // ============================================================
@@ -168,15 +233,74 @@ class Reward extends PositionComponent {
   void render(Canvas canvas) {
     super.render(canvas);
 
+    // ============================================================
+    // ANIMACIÓN DE RECOGIDA
+    // ============================================================
+
+    if (_collected) {
+      _renderCollectEffect(canvas);
+      return;
+    }
+
+    // ============================================================
+    // PULSO NORMAL
+    // ============================================================
+
+    final pulse =
+        (math.sin(_animationTime) + 1) / 2;
+
+    final scale =
+        pulseMin +
+        (pulseMax - pulseMin) * pulse;
+
+    // ============================================================
+    // CENTRO VISUAL
+    // ============================================================
+
+    final center = Offset(
+      size.x / 2,
+      size.y / 2 + _visualFloatOffset,
+    );
+
+    // ============================================================
+    // HALO
+    // ============================================================
+
+    final haloPaint = Paint()
+      ..color = _getColor().withOpacity(
+        0.15 + pulse * 0.20,
+      )
+      ..style = PaintingStyle.fill;
+
+    final haloRadius =
+        (size.x / 2 + 6) * scale;
+
+    canvas.drawCircle(
+      center,
+      haloRadius,
+      haloPaint,
+    );
+
+    // ============================================================
+    // CUERPO
+    // ============================================================
+
+    final rewardRadius =
+        (size.x / 2) * scale;
+
     final paint = Paint()
       ..color = _getColor()
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
-      Offset(size.x / 2, size.y / 2),
-      size.x / 2,
+      center,
+      rewardRadius,
       paint,
     );
+
+    // ============================================================
+    // BORDE
+    // ============================================================
 
     final borderPaint = Paint()
       ..color = Colors.white
@@ -184,12 +308,146 @@ class Reward extends PositionComponent {
       ..strokeWidth = 2;
 
     canvas.drawCircle(
-      Offset(size.x / 2, size.y / 2),
-      size.x / 2 - 1,
+      center,
+      rewardRadius - 1,
       borderPaint,
     );
 
-    _renderSymbol(canvas);
+    // ============================================================
+    // SÍMBOLO
+    // ============================================================
+
+    _renderSymbol(
+      canvas,
+      center,
+    );
+  }
+
+  // ============================================================
+  // EFECTO DE RECOGIDA
+  // ============================================================
+
+  void _renderCollectEffect(Canvas canvas) {
+    final progress =
+        (_collectAnimationTime / collectAnimationDuration)
+            .clamp(0.0, 1.0);
+
+    // ============================================================
+    // CURVA DE ANIMACIÓN
+    // ============================================================
+
+    final easedProgress =
+        Curves.easeOut.transform(progress);
+
+    // ============================================================
+    // CENTRO
+    // ============================================================
+
+    final center = Offset(
+      size.x / 2,
+      size.y / 2,
+    );
+
+    // ============================================================
+    // DESTELLO EXTERIOR
+    // ============================================================
+
+    final flashRadius =
+        collectFlashRadius * easedProgress;
+
+    final flashOpacity =
+        (1.0 - easedProgress) * 0.75;
+
+    final flashPaint = Paint()
+      ..color = Colors.white.withOpacity(
+        flashOpacity,
+      )
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      center,
+      flashRadius,
+      flashPaint,
+    );
+
+    // ============================================================
+    // HALO DEL COLOR DEL REWARD
+    // ============================================================
+
+    final haloRadius =
+        (size.x / 2 + 8) +
+        (20 * easedProgress);
+
+    final haloOpacity =
+        (1.0 - easedProgress) * 0.6;
+
+    final haloPaint = Paint()
+      ..color = _getColor().withOpacity(
+        haloOpacity,
+      )
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      center,
+      haloRadius,
+      haloPaint,
+    );
+
+    // ============================================================
+    // REWARD QUE SE EXPANDE
+    // ============================================================
+
+    final rewardScale =
+        1.0 +
+        (collectMaxScale - 1.0) * easedProgress;
+
+    final rewardRadius =
+        (size.x / 2) * rewardScale;
+
+    final rewardOpacity =
+        1.0 - easedProgress;
+
+    final rewardPaint = Paint()
+      ..color = _getColor().withOpacity(
+        rewardOpacity,
+      )
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      center,
+      rewardRadius,
+      rewardPaint,
+    );
+
+    // ============================================================
+    // BORDE
+    // ============================================================
+
+    final borderPaint = Paint()
+      ..color = Colors.white.withOpacity(
+        rewardOpacity,
+      )
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawCircle(
+      center,
+      rewardRadius - 1,
+      borderPaint,
+    );
+
+    // ============================================================
+    // SÍMBOLO
+    // ============================================================
+
+    if (rewardOpacity > 0.05) {
+      _renderSymbol(
+        canvas,
+        center,
+        opacity: rewardOpacity,
+        scale: rewardScale,
+      );
+    }
   }
 
   // ============================================================
@@ -222,11 +480,16 @@ class Reward extends PositionComponent {
   // SÍMBOLO
   // ============================================================
 
-  void _renderSymbol(Canvas canvas) {
+  void _renderSymbol(
+    Canvas canvas,
+    Offset center, {
+    double opacity = 1.0,
+    double scale = 1.0,
+  }) {
     final textRenderer = TextPaint(
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16,
+      style: TextStyle(
+        color: Colors.white.withOpacity(opacity),
+        fontSize: 16 * scale,
         fontWeight: FontWeight.bold,
       ),
     );
@@ -259,12 +522,18 @@ class Reward extends PositionComponent {
         break;
     }
 
+    final textWidth = symbol == 'XP'
+        ? 20 * scale
+        : 16 * scale;
+
+    final textHeight = 16 * scale;
+
     textRenderer.render(
       canvas,
       symbol,
       Vector2(
-        size.x / 2 - 10,
-        size.y / 2 - 10,
+        center.dx - textWidth / 2,
+        center.dy - textHeight / 2,
       ),
     );
   }
