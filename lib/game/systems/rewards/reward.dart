@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/player/player.dart';
+import 'reward_popup.dart';
 import 'reward_type.dart';
 
 class Reward extends PositionComponent {
@@ -19,6 +20,7 @@ class Reward extends PositionComponent {
         );
 
   final RewardType type;
+
   final Player player;
 
   bool _collected = false;
@@ -29,10 +31,10 @@ class Reward extends PositionComponent {
 
   double _animationTime = 0;
 
-  /// Desplazamiento vertical máximo.
+  /// Desplazamiento vertical máximo del efecto de flotación.
   final double floatAmplitude = 4;
 
-  /// Velocidad de flotación/pulso.
+  /// Velocidad de la animación.
   final double animationSpeed = 3;
 
   /// Escala mínima del pulso.
@@ -41,7 +43,7 @@ class Reward extends PositionComponent {
   /// Escala máxima del pulso.
   final double pulseMax = 1.10;
 
-  /// Desplazamiento visual vertical.
+  /// Desplazamiento visual actual.
   double _visualFloatOffset = 0;
 
   // ============================================================
@@ -50,14 +52,22 @@ class Reward extends PositionComponent {
 
   double _collectAnimationTime = 0;
 
-  /// Duración total del efecto de recogida.
-  final double collectAnimationDuration = 0.20;
+  /// Duración del efecto de recogida.
+  final double collectAnimationDuration = 0.50;
 
-  /// Escala máxima durante la recogida.
-  final double collectMaxScale = 1.8;
+  /// Escala máxima del reward.
+  final double collectMaxScale = 2.2;
 
   /// Radio máximo del destello.
-  final double collectFlashRadius = 32;
+  final double collectFlashRadius = 50;
+
+  // ============================================================
+  // PARTÍCULAS
+  // ============================================================
+
+  static const int particleCount = 12;
+
+  final List<_RewardParticle> _particles = [];
 
   // ============================================================
   // UPDATE
@@ -73,6 +83,18 @@ class Reward extends PositionComponent {
 
     if (_collected) {
       _collectAnimationTime += dt;
+
+      // ----------------------------------------------------------
+      // ACTUALIZAR PARTÍCULAS
+      // ----------------------------------------------------------
+
+      for (final particle in _particles) {
+        particle.update(dt);
+      }
+
+      // ----------------------------------------------------------
+      // FINALIZAR ANIMACIÓN
+      // ----------------------------------------------------------
 
       if (_collectAnimationTime >= collectAnimationDuration) {
         removeFromParent();
@@ -181,14 +203,123 @@ class Reward extends PositionComponent {
       'RECOMPENSA RECOGIDA: ${type.name}',
     );
 
-    // Aplicamos inmediatamente el efecto.
+    // ============================================================
+    // APLICAR RECOMPENSA
+    // ============================================================
+
     _applyReward();
 
-    // El componente NO se elimina inmediatamente.
-    //
-    // Se mantiene durante unos milisegundos para poder
-    // reproducir la animación visual de recogida.
+    // ============================================================
+    // MOSTRAR TEXTO FLOTANTE
+    // ============================================================
+
+    _createRewardPopup();
+
+    // ============================================================
+    // CREAR EXPLOSIÓN
+    // ============================================================
+
+    _createParticles();
+
     _collectAnimationTime = 0;
+  }
+
+  // ============================================================
+  // CREAR TEXTO FLOTANTE
+  // ============================================================
+
+  void _createRewardPopup() {
+    final parentComponent = parent;
+
+    if (parentComponent == null) {
+      return;
+    }
+
+    parentComponent.add(
+      RewardPopup(
+        position: position.clone(),
+        text: _getRewardText(),
+        color: _getColor(),
+      ),
+    );
+  }
+
+  // ============================================================
+  // TEXTO DE LA RECOMPENSA
+  // ============================================================
+
+  String _getRewardText() {
+    switch (type) {
+      case RewardType.heal:
+        return '+30 HP';
+
+      case RewardType.maxHealth:
+        return '+25 MAX HP';
+
+      case RewardType.damage:
+        return '+20% DAMAGE';
+
+      case RewardType.attackSpeed:
+        return '+20% ATTACK SPEED';
+
+      case RewardType.movementSpeed:
+        return '+15% SPEED';
+
+      case RewardType.experience:
+        return '+50 XP';
+    }
+  }
+
+  // ============================================================
+  // CREAR PARTÍCULAS
+  // ============================================================
+
+  void _createParticles() {
+    _particles.clear();
+
+    final random = math.Random();
+
+    for (var i = 0; i < particleCount; i++) {
+      // ----------------------------------------------------------
+      // DIRECCIÓN RADIAL
+      // ----------------------------------------------------------
+
+      final angle =
+          (math.pi * 2 / particleCount) * i +
+          (random.nextDouble() - 0.5) * 0.35;
+
+      // ----------------------------------------------------------
+      // VELOCIDAD
+      // ----------------------------------------------------------
+
+      final speed =
+          90 + random.nextDouble() * 70;
+
+      // ----------------------------------------------------------
+      // DIRECCIÓN
+      // ----------------------------------------------------------
+
+      final direction = Vector2(
+        math.cos(angle),
+        math.sin(angle),
+      );
+
+      // ----------------------------------------------------------
+      // CREAR PARTÍCULA
+      // ----------------------------------------------------------
+
+      _particles.add(
+        _RewardParticle(
+          position: Vector2(
+            size.x / 2,
+            size.y / 2,
+          ),
+          velocity: direction * speed,
+          size: 3 + random.nextDouble() * 3,
+          color: _getColor(),
+        ),
+      );
+    }
   }
 
   // ============================================================
@@ -332,16 +463,8 @@ class Reward extends PositionComponent {
         (_collectAnimationTime / collectAnimationDuration)
             .clamp(0.0, 1.0);
 
-    // ============================================================
-    // CURVA DE ANIMACIÓN
-    // ============================================================
-
     final easedProgress =
         Curves.easeOut.transform(progress);
-
-    // ============================================================
-    // CENTRO
-    // ============================================================
 
     final center = Offset(
       size.x / 2,
@@ -349,14 +472,25 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // DESTELLO EXTERIOR
+    // PARTÍCULAS
+    // ============================================================
+
+    for (final particle in _particles) {
+      particle.render(
+        canvas,
+        progress,
+      );
+    }
+
+    // ============================================================
+    // DESTELLO BLANCO
     // ============================================================
 
     final flashRadius =
         collectFlashRadius * easedProgress;
 
     final flashOpacity =
-        (1.0 - easedProgress) * 0.75;
+        (1.0 - easedProgress) * 0.80;
 
     final flashPaint = Paint()
       ..color = Colors.white.withOpacity(
@@ -371,15 +505,15 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // HALO DEL COLOR DEL REWARD
+    // HALO DEL REWARD
     // ============================================================
 
     final haloRadius =
         (size.x / 2 + 8) +
-        (20 * easedProgress);
+        (25 * easedProgress);
 
     final haloOpacity =
-        (1.0 - easedProgress) * 0.6;
+        (1.0 - easedProgress) * 0.65;
 
     final haloPaint = Paint()
       ..color = _getColor().withOpacity(
@@ -536,5 +670,97 @@ class Reward extends PositionComponent {
         center.dy - textHeight / 2,
       ),
     );
+  }
+}
+
+// ============================================================================
+// PARTÍCULA DE REWARD
+// ============================================================================
+
+class _RewardParticle {
+  _RewardParticle({
+    required this.position,
+    required this.velocity,
+    required this.size,
+    required this.color,
+  });
+
+  Vector2 position;
+  Vector2 velocity;
+
+  final double size;
+  final Color color;
+
+  double lifetime = 0;
+
+  /// Tiempo de vida de cada partícula.
+  static const double maxLifetime = 0.50;
+
+  void update(double dt) {
+    lifetime += dt;
+
+    // ------------------------------------------------------------
+    // MOVIMIENTO
+    // ------------------------------------------------------------
+
+    position += velocity * dt;
+
+    // ------------------------------------------------------------
+    // DESACELERACIÓN
+    // ------------------------------------------------------------
+
+    velocity *= 0.94;
+  }
+
+  void render(
+    Canvas canvas,
+    double animationProgress,
+  ) {
+    final progress =
+        (lifetime / maxLifetime).clamp(0.0, 1.0);
+
+    final opacity =
+        (1.0 - progress) * 0.95;
+
+    final particleSize =
+        size * (1.0 - progress * 0.5);
+
+    // ------------------------------------------------------------
+    // PARTÍCULA
+    // ------------------------------------------------------------
+
+    final paint = Paint()
+      ..color = color.withOpacity(opacity)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      Offset(
+        position.x,
+        position.y,
+      ),
+      particleSize,
+      paint,
+    );
+
+    // ------------------------------------------------------------
+    // NÚCLEO BLANCO
+    // ------------------------------------------------------------
+
+    if (progress < 0.5) {
+      final corePaint = Paint()
+        ..color = Colors.white.withOpacity(
+          opacity * 0.7,
+        )
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        Offset(
+          position.x,
+          position.y,
+        ),
+        particleSize * 0.35,
+        corePaint,
+      );
+    }
   }
 }
