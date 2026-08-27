@@ -57,7 +57,7 @@ class LastSurvivorGame extends FlameGame {
     gameWorld = GameWorld(player: player);
 
     world.add(gameWorld);
-    world.add(player);    
+    world.add(player);
 
     // ============================================================
     // NIEBLA DE GUERRA
@@ -88,6 +88,11 @@ class LastSurvivorGame extends FlameGame {
     enemySpawner = EnemySpawner(player: player, world: world);
 
     add(enemySpawner);
+
+    player.updateWaveInfo(
+      wave: enemySpawner.currentWave,
+      zombies: enemySpawner.zombiesLeft,
+    );
 
     // ============================================================
     // JOYSTICK

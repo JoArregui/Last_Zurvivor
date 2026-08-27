@@ -38,6 +38,8 @@ class GameController extends ChangeNotifier {
     required double experienceToNextLevel,
     required double health,
     required double maxHealth,
+    required int wave,
+    required int zombiesRemaining,
   }) {
     _hud = HudData(
       level: level,
@@ -45,6 +47,8 @@ class GameController extends ChangeNotifier {
       experienceToNextLevel: experienceToNextLevel,
       health: health,
       maxHealth: maxHealth,
+      wave: wave,
+      zombiesRemaining: zombiesRemaining,
     );
 
     notifyListeners();
@@ -81,20 +85,20 @@ class GameController extends ChangeNotifier {
   }
 
   void restartGame() {
-  state = GameState.playing;
+    state = GameState.playing;
 
-  level = 1;
+    level = 1;
 
-  _hud = const HudData(
-    level: 1,
-    experience: 0,
-    experienceToNextLevel: 100,
-    health: 100,
-    maxHealth: 100,
-  );
+    _hud = const HudData(
+      level: 1,
+      experience: 0,
+      experienceToNextLevel: 100,
+      health: 100,
+      maxHealth: 100,
+    );
 
-  player = null;
+    player = null;
 
-  notifyListeners();
-}
+    notifyListeners();
+  }
 }
