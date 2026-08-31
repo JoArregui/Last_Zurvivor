@@ -29,18 +29,6 @@ class Player extends PositionComponent {
   late final Weapon weapon;
 
   // ============================================================
-  // INFORMACIÓN DE LA OLEADA
-  // ============================================================
-
-  /// Número de oleada actual.
-  ///
-  /// Se actualiza desde LastSurvivorGame.
-  int currentWave = 1;
-
-  /// Número de zombis que quedan para completar la oleada.
-  int zombiesRemaining = 0;
-
-  // ============================================================
   // ACTUALIZAR HUD
   // ============================================================
 
@@ -52,9 +40,6 @@ class Player extends PositionComponent {
       health: stats.health,
       maxHealth: stats.maxHealth,
 
-      // Información de la oleada.
-      wave: currentWave,
-      zombiesRemaining: zombiesRemaining,
     );
   }
 
@@ -157,20 +142,6 @@ class Player extends PositionComponent {
   // ============================================================
 
   void refreshHud() {
-    _updateHud();
-  }
-
-  // ============================================================
-  // ACTUALIZAR INFORMACIÓN DE LA OLEADA
-  // ============================================================
-
-  void updateWaveInfo({
-    required int wave,
-    required int zombies,
-  }) {
-    currentWave = wave;
-    zombiesRemaining = zombies;
-
     _updateHud();
   }
 

@@ -89,11 +89,6 @@ class LastSurvivorGame extends FlameGame {
 
     add(enemySpawner);
 
-    player.updateWaveInfo(
-      wave: enemySpawner.currentWave,
-      zombies: enemySpawner.zombiesLeft,
-    );
-
     // ============================================================
     // JOYSTICK
     // ============================================================

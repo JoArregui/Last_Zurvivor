@@ -5,8 +5,6 @@ class HudData {
     required this.experienceToNextLevel,
     required this.health,
     required this.maxHealth,
-    this.wave = 1,
-    this.zombiesRemaining = 0,
   });
 
   // ============================================================
@@ -22,16 +20,6 @@ class HudData {
   final double health;
 
   final double maxHealth;
-
-  // ============================================================
-  // OLEADA
-  // ============================================================
-
-  /// Oleada actual.
-  final int wave;
-
-  /// Número de zombis que quedan para completar la oleada.
-  final int zombiesRemaining;
 
   // ============================================================
   // PROGRESO DE EXPERIENCIA

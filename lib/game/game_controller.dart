@@ -24,13 +24,21 @@ class GameController extends ChangeNotifier {
 
   HudData get hud => _hud;
 
-  bool get isPlaying => state == GameState.playing;
+  bool get isPlaying =>
+      state == GameState.playing;
 
-  bool get isLevelUp => state == GameState.levelUp;
+  bool get isLevelUp =>
+      state == GameState.levelUp;
 
-  bool get isPaused => state == GameState.paused;
+  bool get isPaused =>
+      state == GameState.paused;
 
-  bool get isGameOver => state == GameState.gameOver;
+  bool get isGameOver =>
+      state == GameState.gameOver;
+
+  // ============================================================
+  // ACTUALIZAR HUD
+  // ============================================================
 
   void updateHud({
     required int level,
@@ -38,51 +46,74 @@ class GameController extends ChangeNotifier {
     required double experienceToNextLevel,
     required double health,
     required double maxHealth,
-    required int wave,
-    required int zombiesRemaining,
   }) {
     _hud = HudData(
       level: level,
       experience: experience,
-      experienceToNextLevel: experienceToNextLevel,
+      experienceToNextLevel:
+          experienceToNextLevel,
       health: health,
       maxHealth: maxHealth,
-      wave: wave,
-      zombiesRemaining: zombiesRemaining,
     );
 
     notifyListeners();
   }
 
+  // ============================================================
+  // LEVEL UP
+  // ============================================================
+
   void showLevelUpScreen(int newLevel) {
     level = newLevel;
+
     state = GameState.levelUp;
+
     notifyListeners();
   }
 
   void hideLevelUpScreen() {
     state = GameState.playing;
+
     notifyListeners();
   }
 
+  // ============================================================
+  // PAUSA
+  // ============================================================
+
   void pauseGame() {
-    if (state != GameState.playing) return;
+    if (state != GameState.playing) {
+      return;
+    }
 
     state = GameState.paused;
+
     notifyListeners();
   }
 
   void resumeGame() {
-    if (state != GameState.paused) return;
+    if (state != GameState.paused) {
+      return;
+    }
 
     state = GameState.playing;
+
     notifyListeners();
   }
+
+  // ============================================================
+  // GAME OVER
+  // ============================================================
 
   void gameOver() {
     state = GameState.gameOver;
+
     notifyListeners();
   }
+
+  // ============================================================
+  // REINICIAR
+  // ============================================================
 
   void restartGame() {
     state = GameState.playing;

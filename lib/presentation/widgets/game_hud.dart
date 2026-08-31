@@ -16,7 +16,8 @@ class GameHud extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
             // ====================================================
             // NIVEL
@@ -43,9 +44,7 @@ class GameHud extends StatelessWidget {
             // EXPERIENCIA
             // ====================================================
 
-            _ExperienceBar(
-              hud: hud,
-            ),
+            _ExperienceBar(hud: hud),
 
             const SizedBox(height: 12),
 
@@ -53,19 +52,7 @@ class GameHud extends StatelessWidget {
             // VIDA
             // ====================================================
 
-            _HealthBar(
-              hud: hud,
-            ),
-
-            const SizedBox(height: 16),
-
-            // ====================================================
-            // OLEADA
-            // ====================================================
-
-            _WaveInfo(
-              hud: hud,
-            ),
+            _HealthBar(hud: hud),
           ],
         ),
       ),
@@ -87,7 +74,8 @@ class _ExperienceBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         const Text(
           'XP',
@@ -110,12 +98,14 @@ class _ExperienceBar extends StatelessWidget {
           width: 220,
           height: 12,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius:
+                BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: hud.experienceProgress,
               backgroundColor: Colors.black54,
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(
+                  const AlwaysStoppedAnimation<
+                      Color>(
                 Colors.amber,
               ),
             ),
@@ -151,7 +141,8 @@ class _HealthBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Text(
           '❤️ ${hud.health.toInt()} / '
@@ -175,93 +166,20 @@ class _HealthBar extends StatelessWidget {
           width: 220,
           height: 16,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius:
+                BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: hud.healthProgress,
               backgroundColor: Colors.black54,
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(
+                  const AlwaysStoppedAnimation<
+                      Color>(
                 Colors.red,
               ),
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-// =================================================================
-// INFORMACIÓN DE LA OLEADA
-// =================================================================
-
-class _WaveInfo extends StatelessWidget {
-  const _WaveInfo({
-    required this.hud,
-  });
-
-  final HudData hud;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.25),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ======================================================
-          // OLEADA
-          // ======================================================
-
-          Text(
-            'OLEADA ${hud.wave}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(
-                  color: Colors.black,
-                  blurRadius: 3,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          // ======================================================
-          // ZOMBIS RESTANTES
-          // ======================================================
-
-          const Icon(
-            Icons.dangerous,
-            color: Colors.redAccent,
-            size: 18,
-          ),
-
-          const SizedBox(width: 5),
-
-          Text(
-            '${hud.zombiesRemaining}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
