@@ -7,6 +7,7 @@ import '../../systems/rewards/reward.dart';
 import '../../systems/rewards/reward_type.dart';
 import '../../../core/theme/game_theme.dart';
 import '../player/player.dart';
+import '../zombies/zombie_sprites.dart';
 
 enum ZombieState {
   idle,
@@ -651,45 +652,90 @@ class Zombie extends PositionComponent {
     super.render(canvas);
 
     // ==========================================================
-    // CUERPO
+    // ZOMBIES (variante zombies, Desktop/Zombies)
+    // walker = Caminante / runner = Corredor / tank = Tanque
     // ==========================================================
 
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+    final ghoul = _zombieSprite();
 
-    canvas.drawCircle(
-      Offset(
+    if (ghoul != null) {
+      final toPlayer = player.position - position;
+      final angle = toPlayer.length2 > 0.01
+          ? math.atan2(toPlayer.y, toPlayer.x)
+          : 0.0;
+
+      // Dibujamos el sprite mas grande que el hitbox para que
+      // se aprecie el pixel-art (el combate sigue por distancia).
+      final drawH = size.x * 2.6;
+      final drawW =
+          drawH * (ghoul.image.width / ghoul.image.height);
+      final cx = size.x / 2;
+      final cy = size.y / 2;
+
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(angle);
+      ghoul.render(
+        canvas,
+        position: Vector2(-drawW / 2, -drawH / 2),
+        size: Vector2(drawW, drawH),
+      );
+      canvas.restore();
+    } else {
+      // ========================================================
+      // CUERPO (resto de variantes)
+      // ========================================================
+
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        Offset(
+          size.x / 2,
+          size.y / 2,
+        ),
         size.x / 2,
-        size.y / 2,
-      ),
-      size.x / 2,
-      paint,
-    );
+        paint,
+      );
 
-    // ==========================================================
-    // BORDE
-    // ==========================================================
+      // ========================================================
+      // BORDE
+      // ========================================================
 
-    final borderPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      final borderPaint = Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
 
-    canvas.drawCircle(
-      Offset(
-        size.x / 2,
-        size.y / 2,
-      ),
-      size.x / 2 - 1,
-      borderPaint,
-    );
+      canvas.drawCircle(
+        Offset(
+          size.x / 2,
+          size.y / 2,
+        ),
+        size.x / 2 - 1,
+        borderPaint,
+      );
+    }
 
     // ==========================================================
     // VIDA
     // ==========================================================
 
     _renderHealthBar(canvas);
+  }
+
+  /// Sprite zombie segun tipo, o null fuera de la variante.
+  Sprite? _zombieSprite() {
+    if (!ZombieSprites.useSprites) return null;
+    switch (type) {
+      case ZombieType.normal:
+        return ZombieSprites.walker;
+      case ZombieType.fast:
+        return ZombieSprites.runner;
+      case ZombieType.tank:
+        return ZombieSprites.tank;
+    }
   }
 
   // ============================================================

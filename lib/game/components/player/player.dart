@@ -1,11 +1,13 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 import '../../../core/constants/game_constants.dart';
 import '../../../core/theme/game_theme.dart';
 import '../../game_controller.dart';
 import '../../systems/progression/player_progression.dart';
 import '../weapons/weapon.dart';
+import '../zombies/zombie_sprites.dart';
 import 'player_stats.dart';
 
 class Player extends PositionComponent {
@@ -54,6 +56,9 @@ class Player extends PositionComponent {
 
     // Velocidad base segun variante (aviones / zombies / naves).
     stats.movementSpeed = GameThemes.current.playerSpeed;
+
+    // Variante zombie: precarga sprites (superviviente, fondo).
+    await ZombieSprites.ensureLoaded();
 
     weapon = Weapon(player: this);
 
@@ -158,39 +163,64 @@ class Player extends PositionComponent {
     super.render(canvas);
 
     // ============================================================
-    // CUERPO DEL JUGADOR
+    // SUPERVIVIENTE (variante zombies, Desktop/Zombies)
     // ============================================================
 
-    final playerPaint = Paint()
-      ..color = GameThemes.current.playerColor
-      ..style = PaintingStyle.fill;
+    final survivor = ZombieSprites.useSprites
+        ? ZombieSprites.player
+        : null;
 
-    canvas.drawCircle(
-      Offset(
+    if (survivor != null) {
+      // El sprite mira a la derecha (+X): rotamos hacia la velocidad.
+      final hasDirection = velocity.length2 > 0.01;
+      final angle = hasDirection
+          ? math.atan2(velocity.y, velocity.x)
+          : 0.0;
+
+      // Proporcion original 216x334.
+      final drawH = size.x * 2.6;
+      final drawW = drawH * (216 / 334);
+      final cx = size.x / 2;
+      final cy = size.y / 2;
+
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(angle);
+      survivor.render(
+        canvas,
+        position: Vector2(-drawW / 2, -drawH / 2),
+        size: Vector2(drawW, drawH),
+      );
+      canvas.restore();
+    } else {
+      // Fallback resto de variantes: circulo por tema.
+      final playerPaint = Paint()
+        ..color = GameThemes.current.playerColor
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        Offset(
+          size.x / 2,
+          size.y / 2,
+        ),
         size.x / 2,
-        size.y / 2,
-      ),
-      size.x / 2,
-      playerPaint,
-    );
+        playerPaint,
+      );
 
-    // ============================================================
-    // BORDE
-    // ============================================================
+      final borderPaint = Paint()
+        ..color = GameThemes.current.playerBorderColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3;
 
-    final borderPaint = Paint()
-      ..color = GameThemes.current.playerBorderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    canvas.drawCircle(
-      Offset(
-        size.x / 2,
-        size.y / 2,
-      ),
-      size.x / 2 - 2,
-      borderPaint,
-    );
+      canvas.drawCircle(
+        Offset(
+          size.x / 2,
+          size.y / 2,
+        ),
+        size.x / 2 - 2,
+        borderPaint,
+      );
+    }
 
     // ============================================================
     // NIVEL

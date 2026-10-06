@@ -2,6 +2,11 @@
 
 > 🧟 RAMA ACTIVA: `variante-zombies` — Apocalipsis (Caminante / Corredor / Tanque).
 > Tema: `GameThemes.zombies` (playerSpeed 200, range 500, fondo verde `0xFF4A6741`).
+> Sprites de `Desktop/Zombies` aplicados (JPG con fondo -> PNG con alfa por rembg/u2net,
+> el flood-fill por color no servia: los personajes son tan oscuros como el fondo):
+> `player` = superviviente, `walker` = Caminante, `runner` = Corredor, `tank` = Tanque,
+> `bullet` = bala, `background_tile.jpg` = asfalto en mosaico, `heart` = vida,
+> `coin` (calavera) = XP, `bullet/heart` = iconos del level-up.
 
 Juego **survivors-like** en Flutter + Flame: oleadas, progresion, recompensas,
 niebla de guerra, minimapa y HUD en Flutter.

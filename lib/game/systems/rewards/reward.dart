@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/player/player.dart';
+import '../../components/zombies/zombie_sprites.dart';
 import 'reward_popup.dart';
 import 'reward_type.dart';
 
@@ -413,21 +414,35 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // CUERPO
+    // CUERPO (sprite zombie o circulo por defecto)
+    // heart = vida / coin = XP (Desktop/Zombies)
     // ============================================================
 
-    final rewardRadius =
-        (size.x / 2) * scale;
+    final rewardRadius = (size.x / 2) * scale;
 
-    final paint = Paint()
-      ..color = _getColor()
-      ..style = PaintingStyle.fill;
+    final icon = _zombieSprite();
 
-    canvas.drawCircle(
-      center,
-      rewardRadius,
-      paint,
-    );
+    if (icon != null) {
+      final iconSize = size.x * scale;
+      icon.render(
+        canvas,
+        position: Vector2(
+          center.dx - iconSize / 2,
+          center.dy - iconSize / 2,
+        ),
+        size: Vector2.all(iconSize),
+      );
+    } else {
+      final paint = Paint()
+        ..color = _getColor()
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        center,
+        rewardRadius,
+        paint,
+      );
+    }
 
     // ============================================================
     // BORDE
@@ -445,13 +460,15 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // SÍMBOLO
+    // SÍMBOLO (solo sin sprite: el icono ya habla por si mismo)
     // ============================================================
 
-    _renderSymbol(
-      canvas,
-      center,
-    );
+    if (icon == null) {
+      _renderSymbol(
+        canvas,
+        center,
+      );
+    }
   }
 
   // ============================================================
@@ -581,6 +598,25 @@ class Reward extends PositionComponent {
         opacity: rewardOpacity,
         scale: rewardScale,
       );
+    }
+  }
+
+  // ============================================================
+  // SPRITE ZOMBIE (Desktop/Zombies)
+  // ============================================================
+
+  Sprite? _zombieSprite() {
+    if (!ZombieSprites.useSprites) return null;
+    switch (type) {
+      case RewardType.heal:
+      case RewardType.maxHealth:
+        return ZombieSprites.heart;
+      case RewardType.experience:
+        return ZombieSprites.coin;
+      case RewardType.damage:
+      case RewardType.attackSpeed:
+      case RewardType.movementSpeed:
+        return null;
     }
   }
 
