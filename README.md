@@ -1,5 +1,9 @@
 # Last Survivor — Motor + 3 variantes
 
+> 🚀 RAMA ACTIVA: `variante-naves-espaciales` — Espacio (Dron / Interceptor espectral / Crucero).
+> Tema: `GameThemes.space` (playerSpeed 240, range 650, fondo espacio `0xFF0B1026`, drop 0.18).
+> Jugador: interceptor estelar cian, laser verde; niebla = sector inexplorado.
+
 Juego **survivors-like** en Flutter + Flame: oleadas, progresion, recompensas,
 niebla de guerra, minimapa y HUD en Flutter.
 

@@ -164,10 +164,8 @@ class GameThemes {
     rewardDropChance: 0.18,
   );
 
-  /// Tema activo. Por defecto zombies (rama main).
-  ///
-  /// Cada rama variante reasigna este campo en su commit inicial.
-  static GameTheme current = zombies;
+  /// Tema activo. Rama VARIANTE-NAVES-ESPACIALES.
+  static GameTheme current = space;
 
   static GameTheme byId(GameVariantId id) {
     switch (id) {
