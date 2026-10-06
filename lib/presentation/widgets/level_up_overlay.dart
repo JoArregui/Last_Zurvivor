@@ -1,6 +1,23 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/game_theme.dart';
 import '../../game/game_controller.dart';
+
+/// Iconos de la variante de aviones: trazadora y cruz medica de
+/// Desktop/Aviones en vez de emojis. Sin asset para velocidad.
+String? _planeIconAsset(UpgradeOption option) {
+  if (GameThemes.current.id != GameVariantId.planes) {
+    return null;
+  }
+  switch (option) {
+    case UpgradeOption.damage:
+      return 'assets/images/planes/bullet.png';
+    case UpgradeOption.speed:
+      return null;
+    case UpgradeOption.health:
+      return 'assets/images/planes/heart.png';
+  }
+}
 
 class LevelUpOverlay extends StatelessWidget {
   const LevelUpOverlay({
@@ -53,6 +70,8 @@ class LevelUpOverlay extends StatelessWidget {
               _UpgradeButton(
                 icon: '🔫',
                 title: '+20% DAÑO',
+                iconAsset:
+                    _planeIconAsset(UpgradeOption.damage),
                 onTap: () {
                   onUpgradeSelected(
                     UpgradeOption.damage,
@@ -65,6 +84,8 @@ class LevelUpOverlay extends StatelessWidget {
               _UpgradeButton(
                 icon: '🏃',
                 title: '+15% VELOCIDAD',
+                iconAsset:
+                    _planeIconAsset(UpgradeOption.speed),
                 onTap: () {
                   onUpgradeSelected(
                     UpgradeOption.speed,
@@ -77,6 +98,8 @@ class LevelUpOverlay extends StatelessWidget {
               _UpgradeButton(
                 icon: '❤️',
                 title: '+30 VIDA',
+                iconAsset:
+                    _planeIconAsset(UpgradeOption.health),
                 onTap: () {
                   onUpgradeSelected(
                     UpgradeOption.health,
@@ -96,24 +119,51 @@ class _UpgradeButton extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    this.iconAsset,
   });
 
   final String icon;
   final String title;
   final VoidCallback onTap;
 
+  /// Sprite de Desktop/Aviones (rama aviones). Si null, emoji clásico.
+  final String? iconAsset;
+
   @override
   Widget build(BuildContext context) {
+    final leading = iconAsset != null
+        ? Image.asset(
+            iconAsset!,
+            width: 32,
+            height: 32,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => Text(
+              icon,
+              style: const TextStyle(fontSize: 20),
+            ),
+          )
+        : Text(
+            icon,
+            style: const TextStyle(fontSize: 20),
+          );
+
     return SizedBox(
       width: double.infinity,
       height: 60,
       child: ElevatedButton(
         onPressed: onTap,
-        child: Text(
-          '$icon  $title',
-          style: const TextStyle(
-            fontSize: 18,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            leading,
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+              ),
+            ),
+          ],
         ),
       ),
     );

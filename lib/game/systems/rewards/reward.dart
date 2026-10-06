@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/player/player.dart';
+import '../../components/planes/plane_sprites.dart';
 import 'reward_popup.dart';
 import 'reward_type.dart';
 
@@ -413,21 +414,35 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // CUERPO
+    // CUERPO (medalla avion o circulo por defecto)
+    // heart = cruz medica / coin = condecoracion (Desktop/Aviones)
     // ============================================================
 
-    final rewardRadius =
-        (size.x / 2) * scale;
+    final rewardRadius = (size.x / 2) * scale;
 
-    final paint = Paint()
-      ..color = _getColor()
-      ..style = PaintingStyle.fill;
+    final medal = _planeSprite();
 
-    canvas.drawCircle(
-      center,
-      rewardRadius,
-      paint,
-    );
+    if (medal != null) {
+      final iconSize = size.x * scale;
+      medal.render(
+        canvas,
+        position: Vector2(
+          center.dx - iconSize / 2,
+          center.dy - iconSize / 2,
+        ),
+        size: Vector2.all(iconSize),
+      );
+    } else {
+      final paint = Paint()
+        ..color = _getColor()
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        center,
+        rewardRadius,
+        paint,
+      );
+    }
 
     // ============================================================
     // BORDE
@@ -445,13 +460,15 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // SÍMBOLO
+    // SÍMBOLO (solo sin sprite: la medalla ya habla por si misma)
     // ============================================================
 
-    _renderSymbol(
-      canvas,
-      center,
-    );
+    if (medal == null) {
+      _renderSymbol(
+        canvas,
+        center,
+      );
+    }
   }
 
   // ============================================================
@@ -581,6 +598,25 @@ class Reward extends PositionComponent {
         opacity: rewardOpacity,
         scale: rewardScale,
       );
+    }
+  }
+
+  // ============================================================
+  // MEDALLA AVION (Desktop/Aviones)
+  // ============================================================
+
+  Sprite? _planeSprite() {
+    if (!PlaneSprites.useSprites) return null;
+    switch (type) {
+      case RewardType.heal:
+      case RewardType.maxHealth:
+        return PlaneSprites.heart;
+      case RewardType.experience:
+        return PlaneSprites.coin;
+      case RewardType.damage:
+      case RewardType.attackSpeed:
+      case RewardType.movementSpeed:
+        return null;
     }
   }
 

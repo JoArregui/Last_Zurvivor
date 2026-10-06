@@ -7,6 +7,7 @@ import '../../systems/rewards/reward.dart';
 import '../../systems/rewards/reward_type.dart';
 import '../../../core/theme/game_theme.dart';
 import '../player/player.dart';
+import '../planes/plane_sprites.dart';
 
 enum ZombieState {
   idle,
@@ -651,45 +652,91 @@ class Zombie extends PositionComponent {
     super.render(canvas);
 
     // ==========================================================
-    // CUERPO
+    // AVIONES ENEMIGOS (variante aviones, Desktop/Aviones)
+    // walker = Interceptor / runner = Caza ligero / tank = Bombardero
+    // Miran hacia arriba: +pi/2 sobre el angulo XY.
     // ==========================================================
 
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+    final bandit = _planeSprite();
 
-    canvas.drawCircle(
-      Offset(
+    if (bandit != null) {
+      final toPlayer = player.position - position;
+      final angle = toPlayer.length2 > 0.01
+          ? math.atan2(toPlayer.y, toPlayer.x) + math.pi / 2
+          : 0.0;
+
+      // Dibujamos el avion mas grande que el hitbox para que
+      // se aprecie el pixel-art (el combate sigue por distancia).
+      final drawW = size.x * 2.2;
+      final drawH =
+          drawW * (bandit.image.height / bandit.image.width);
+      final cx = size.x / 2;
+      final cy = size.y / 2;
+
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(angle);
+      bandit.render(
+        canvas,
+        position: Vector2(-drawW / 2, -drawH / 2),
+        size: Vector2(drawW, drawH),
+      );
+      canvas.restore();
+    } else {
+      // ========================================================
+      // CUERPO (resto de variantes)
+      // ========================================================
+
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        Offset(
+          size.x / 2,
+          size.y / 2,
+        ),
         size.x / 2,
-        size.y / 2,
-      ),
-      size.x / 2,
-      paint,
-    );
+        paint,
+      );
 
-    // ==========================================================
-    // BORDE
-    // ==========================================================
+      // ========================================================
+      // BORDE
+      // ========================================================
 
-    final borderPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      final borderPaint = Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
 
-    canvas.drawCircle(
-      Offset(
-        size.x / 2,
-        size.y / 2,
-      ),
-      size.x / 2 - 1,
-      borderPaint,
-    );
+      canvas.drawCircle(
+        Offset(
+          size.x / 2,
+          size.y / 2,
+        ),
+        size.x / 2 - 1,
+        borderPaint,
+      );
+    }
 
     // ==========================================================
     // VIDA
     // ==========================================================
 
     _renderHealthBar(canvas);
+  }
+
+  /// Sprite avion segun tipo, o null fuera de la variante.
+  Sprite? _planeSprite() {
+    if (!PlaneSprites.useSprites) return null;
+    switch (type) {
+      case ZombieType.normal:
+        return PlaneSprites.walker;
+      case ZombieType.fast:
+        return PlaneSprites.runner;
+      case ZombieType.tank:
+        return PlaneSprites.tank;
+    }
   }
 
   // ============================================================

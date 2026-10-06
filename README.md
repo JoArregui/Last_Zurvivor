@@ -2,7 +2,11 @@
 
 > ✈️ RAMA ACTIVA: `variante-aviones` — Combate aereo (Interceptor / Caza ligero / Bombardero).
 > Tema: `GameThemes.planes` (playerSpeed 260, range 600, fondo cielo `0xFF87B5D6`).
-> Jugador: caza aliado, proyectiles trazadoras; enemigos mas rapidos, ideal para joystick.
+> Sprites de `Desktop/Aviones` aplicados (JPG con fondo -> PNG con alfa por rembg/u2net):
+> `player` = caza aliado, `walker` = Interceptor, `runner` = Caza ligero, `tank` = Bombardero,
+> `bullet` = rafaga trazadora, `background_tile.jpg` = oceano en mosaico, `heart` (cruz medica) = vida,
+> `coin` (condecoracion) = XP, `bullet/heart` = iconos del level-up.
+> OJO: los aviones miran hacia arriba, la rotacion es `atan2 + pi/2` (ver `plane_sprites.dart`).
 
 Juego **survivors-like** en Flutter + Flame: oleadas, progresion, recompensas,
 niebla de guerra, minimapa y HUD en Flutter.

@@ -1,8 +1,10 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 import '../enemies/zombie.dart';
 import '../../../core/theme/game_theme.dart';
+import '../planes/plane_sprites.dart';
 
 class Projectile extends PositionComponent {
   Projectile({
@@ -83,6 +85,31 @@ class Projectile extends PositionComponent {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+
+    // Rafaga trazadora (Desktop/Aviones bullet.png, vertical).
+    final tracer = PlaneSprites.useSprites
+        ? PlaneSprites.bullet
+        : null;
+
+    if (tracer != null) {
+      final angle = math.atan2(_direction.y, _direction.x) +
+          math.pi / 2;
+
+      // Proporcion original 35x151.
+      final drawH = size.x * 3.2;
+      final drawW = drawH * (35 / 151);
+
+      canvas.save();
+      canvas.translate(size.x / 2, size.y / 2);
+      canvas.rotate(angle);
+      tracer.render(
+        canvas,
+        position: Vector2(-drawW / 2, -drawH / 2),
+        size: Vector2(drawW, drawH),
+      );
+      canvas.restore();
+      return;
+    }
 
     final paint = Paint()
       ..color = GameThemes.current.projectileColor

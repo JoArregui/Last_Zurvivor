@@ -60,6 +60,17 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Variante aviones: sprites procesados de Desktop/Aviones.
+  assets:
+    - assets/images/planes/player.png
+    - assets/images/planes/walker.png
+    - assets/images/planes/runner.png
+    - assets/images/planes/tank.png
+    - assets/images/planes/bullet.png
+    - assets/images/planes/coin.png
+    - assets/images/planes/heart.png
+    - assets/images/planes/background_tile.jpg
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
