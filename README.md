@@ -1,5 +1,8 @@
 # Last Survivor — Motor + 3 variantes
 
+> 🧟 RAMA ACTIVA: `variante-zombies` — Apocalipsis (Caminante / Corredor / Tanque).
+> Tema: `GameThemes.zombies` (playerSpeed 200, range 500, fondo verde `0xFF4A6741`).
+
 Juego **survivors-like** en Flutter + Flame: oleadas, progresion, recompensas,
 niebla de guerra, minimapa y HUD en Flutter.
 
