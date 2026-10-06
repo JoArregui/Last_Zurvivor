@@ -1,5 +1,9 @@
 # Last Survivor — Motor + 3 variantes
 
+> ✈️ RAMA ACTIVA: `variante-aviones` — Combate aereo (Interceptor / Caza ligero / Bombardero).
+> Tema: `GameThemes.planes` (playerSpeed 260, range 600, fondo cielo `0xFF87B5D6`).
+> Jugador: caza aliado, proyectiles trazadoras; enemigos mas rapidos, ideal para joystick.
+
 Juego **survivors-like** en Flutter + Flame: oleadas, progresion, recompensas,
 niebla de guerra, minimapa y HUD en Flutter.
 
