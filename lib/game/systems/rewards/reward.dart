@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/player/player.dart';
+import '../../components/space/space_sprites.dart';
 import 'reward_popup.dart';
 import 'reward_type.dart';
 
@@ -413,21 +414,35 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // CUERPO
+    // CUERPO (sprite espacial o circulo por defecto)
+    // heart = vida / coin = XP (Desktop/Espacio)
     // ============================================================
 
-    final rewardRadius =
-        (size.x / 2) * scale;
+    final spaceIcon = _spaceSprite();
 
-    final paint = Paint()
-      ..color = _getColor()
-      ..style = PaintingStyle.fill;
+    final rewardRadius = (size.x / 2) * scale;
 
-    canvas.drawCircle(
-      center,
-      rewardRadius,
-      paint,
-    );
+    if (spaceIcon != null) {
+      final iconSize = size.x * scale;
+      spaceIcon.render(
+        canvas,
+        position: Vector2(
+          center.dx - iconSize / 2,
+          center.dy - iconSize / 2,
+        ),
+        size: Vector2.all(iconSize),
+      );
+    } else {
+      final paint = Paint()
+        ..color = _getColor()
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        center,
+        rewardRadius,
+        paint,
+      );
+    }
 
     // ============================================================
     // BORDE
@@ -445,13 +460,15 @@ class Reward extends PositionComponent {
     );
 
     // ============================================================
-    // SÍMBOLO
+    // SÍMBOLO (solo sin sprite: el icono ya habla por si mismo)
     // ============================================================
 
-    _renderSymbol(
-      canvas,
-      center,
-    );
+    if (spaceIcon == null) {
+      _renderSymbol(
+        canvas,
+        center,
+      );
+    }
   }
 
   // ============================================================
@@ -581,6 +598,25 @@ class Reward extends PositionComponent {
         opacity: rewardOpacity,
         scale: rewardScale,
       );
+    }
+  }
+
+  // ============================================================
+  // SPRITE ESPACIAL (Desktop/Espacio)
+  // ============================================================
+
+  Sprite? _spaceSprite() {
+    if (!SpaceSprites.useSprites) return null;
+    switch (type) {
+      case RewardType.heal:
+      case RewardType.maxHealth:
+        return SpaceSprites.heart;
+      case RewardType.experience:
+        return SpaceSprites.coin;
+      case RewardType.damage:
+      case RewardType.attackSpeed:
+      case RewardType.movementSpeed:
+        return null;
     }
   }
 

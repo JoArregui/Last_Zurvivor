@@ -1,8 +1,10 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 import '../enemies/zombie.dart';
 import '../../../core/theme/game_theme.dart';
+import '../space/space_sprites.dart';
 
 class Projectile extends PositionComponent {
   Projectile({
@@ -83,6 +85,31 @@ class Projectile extends PositionComponent {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+
+    // Bala laser espacial (Desktop/Espacio bullet.png, mira arriba).
+    final laser = SpaceSprites.useSprites
+        ? SpaceSprites.bullet
+        : null;
+
+    if (laser != null) {
+      final angle = math.atan2(_direction.y, _direction.x) +
+          math.pi / 2;
+
+      // Proporcion original 94x166.
+      final drawH = size.x * 3.2;
+      final drawW = drawH * (94 / 166);
+
+      canvas.save();
+      canvas.translate(size.x / 2, size.y / 2);
+      canvas.rotate(angle);
+      laser.render(
+        canvas,
+        position: Vector2(-drawW / 2, -drawH / 2),
+        size: Vector2(drawW, drawH),
+      );
+      canvas.restore();
+      return;
+    }
 
     final paint = Paint()
       ..color = GameThemes.current.projectileColor

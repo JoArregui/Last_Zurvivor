@@ -60,6 +60,22 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Variante naves espaciales: sprites procesados de Desktop/Espacio.
+  assets:
+    - assets/images/space/player.png
+    - assets/images/space/walker.png
+    - assets/images/space/runner.png
+    - assets/images/space/tank.png
+    - assets/images/space/bullet.png
+    - assets/images/space/coin.png
+    - assets/images/space/heart.png
+    - assets/images/space/pistol.png
+    - assets/images/space/rifle.png
+    - assets/images/space/rocket.png
+    - assets/images/space/shotgun.png
+    - assets/images/space/smg.png
+    - assets/images/space/background_tile.jpg
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

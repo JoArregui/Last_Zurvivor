@@ -2,7 +2,10 @@
 
 > 🚀 RAMA ACTIVA: `variante-naves-espaciales` — Espacio (Dron / Interceptor espectral / Crucero).
 > Tema: `GameThemes.space` (playerSpeed 240, range 650, fondo espacio `0xFF0B1026`, drop 0.18).
-> Jugador: interceptor estelar cian, laser verde; niebla = sector inexplorado.
+> Sprites de `Desktop/Espacio` aplicados (JPG con fondo -> PNG con alfa por flood-fill):
+> `player` = caza aliado, `walker` = Dron, `runner` = Interceptor, `tank` = Crucero,
+> `bullet` = laser, `background_tile.jpg` = mosaico estelar, `heart` = vida,
+> `coin` = XP, `rifle/smg` = iconos del level-up, `pistol/rocket/shotgun` de reserva.
 
 Juego **survivors-like** en Flutter + Flame: oleadas, progresion, recompensas,
 niebla de guerra, minimapa y HUD en Flutter.
