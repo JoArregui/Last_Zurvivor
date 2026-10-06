@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../enemies/zombie.dart';
+import '../../../core/theme/game_theme.dart';
 
 class Projectile extends PositionComponent {
   Projectile({
@@ -84,7 +85,7 @@ class Projectile extends PositionComponent {
     super.render(canvas);
 
     final paint = Paint()
-      ..color = Colors.yellow
+      ..color = GameThemes.current.projectileColor
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(

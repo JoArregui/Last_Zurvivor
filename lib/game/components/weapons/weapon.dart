@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 
 import '../enemies/zombie.dart';
 import '../player/player.dart';
+import '../../../core/theme/game_theme.dart';
 import 'projectile.dart';
 
 class Weapon extends Component {
@@ -19,7 +20,7 @@ class Weapon extends Component {
 
   double fireRate = 0.5;
 
-  double range = 500;
+  double get range => GameThemes.current.weaponRange;
 
   double _fireTimer = 0;
 

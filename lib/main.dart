@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'game/game_controller.dart';
 import 'game/last_survivor_game.dart';
+import 'core/theme/game_theme.dart';
 import 'presentation/widgets/game_hud.dart';
 import 'presentation/widgets/level_up_overlay.dart';
 import 'presentation/widgets/game_over_overlay.dart';
@@ -26,9 +27,10 @@ class LastSurvivorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: GameScreen(),
+      title: GameThemes.current.appTitle,
+      home: const GameScreen(),
     );
   }
 }

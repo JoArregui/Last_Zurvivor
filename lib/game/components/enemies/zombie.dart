@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../systems/rewards/reward.dart';
 import '../../systems/rewards/reward_type.dart';
+import '../../../core/theme/game_theme.dart';
 import '../player/player.dart';
 
 enum ZombieState {
@@ -87,7 +88,7 @@ class Zombie extends PositionComponent {
 
     xpReward = type.xpReward;
 
-    color = type.color;
+    color = _resolveThemeColor(type);
 
     attackDamage =
         type.attackDamage * _getDamageMultiplier();
@@ -192,6 +193,35 @@ class Zombie extends PositionComponent {
   // ============================================================
 
   ZombieState state = ZombieState.idle;
+
+  // ============================================================
+  // COLOR POR VARIANTE (motor comun, piel distinta)
+  // ============================================================
+
+  Color _resolveThemeColor(ZombieType zombieType) {
+    final theme = GameThemes.current;
+    switch (zombieType) {
+      case ZombieType.normal:
+        return theme.enemyNormalColor;
+      case ZombieType.fast:
+        return theme.enemyFastColor;
+      case ZombieType.tank:
+        return theme.enemyTankColor;
+    }
+  }
+
+  /// Nombre narrativo segun variante (Caminante / Interceptor / Dron...).
+  String get displayName {
+    final theme = GameThemes.current;
+    switch (type) {
+      case ZombieType.normal:
+        return theme.enemyNormalName;
+      case ZombieType.fast:
+        return theme.enemyFastName;
+      case ZombieType.tank:
+        return theme.enemyTankName;
+    }
+  }
 
   // ============================================================
   // MULTIPLICADORES DE DIFICULTAD
@@ -589,7 +619,7 @@ class Zombie extends PositionComponent {
   // ============================================================
 
   void _tryDropReward() {
-    const double rewardChance = 0.15;
+    final double rewardChance = GameThemes.current.rewardDropChance;
 
     if (_random.nextDouble() >
         rewardChance) {

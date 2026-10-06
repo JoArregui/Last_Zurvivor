@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/game_constants.dart';
+import '../../../core/theme/game_theme.dart';
 import '../player/player.dart';
 import 'map_point_of_interest.dart';
 
@@ -10,7 +11,7 @@ class GameWorld extends RectangleComponent {
     : super(
         position: Vector2.zero(),
         size: Vector2(GameConstants.worldWidth, GameConstants.worldHeight),
-        paint: Paint()..color = const Color(0xFF4A6741),
+        paint: Paint()..color = GameThemes.current.worldBackground,
         priority: 0,
       );
 

@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/game_constants.dart';
+import '../../../core/theme/game_theme.dart';
 import '../../game_controller.dart';
 import '../../systems/progression/player_progression.dart';
 import '../weapons/weapon.dart';
@@ -50,6 +51,9 @@ class Player extends PositionComponent {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+
+    // Velocidad base segun variante (aviones / zombies / naves).
+    stats.movementSpeed = GameThemes.current.playerSpeed;
 
     weapon = Weapon(player: this);
 
@@ -158,7 +162,7 @@ class Player extends PositionComponent {
     // ============================================================
 
     final playerPaint = Paint()
-      ..color = Colors.blue
+      ..color = GameThemes.current.playerColor
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
@@ -175,7 +179,7 @@ class Player extends PositionComponent {
     // ============================================================
 
     final borderPaint = Paint()
-      ..color = Colors.white
+      ..color = GameThemes.current.playerBorderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
 
